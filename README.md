@@ -1,5 +1,7 @@
 # QA Site REST API with Spring Boot
 
+![test](https://github.com/flowacademyhu/qasite-spring/workflows/Test/badge.svg)
+
 ### Epics
 1. Authentication and Sign Up (with username, password)
 2. Able to ask Question, 
