@@ -1,5 +1,6 @@
 package hu.flowacademy.qasitespring.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,6 +41,15 @@ public class User {
     private String id;
     private String username;
     private String password;
+    /**
+     * Using the full_name as json property name
+     * when we creating json from User object
+     * without this, default property name would be fullName
+     *
+     * When reading a json, the parser (Jackson data binder) will looking for
+     * full_name, instead of default fullName
+     */
+    @JsonProperty("full_name")
     @Column(name = "full_name")
     private String fullName;
     @Enumerated(EnumType.STRING)
