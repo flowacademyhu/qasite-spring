@@ -1,9 +1,12 @@
 package hu.flowacademy.qasitespring.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -27,6 +30,8 @@ public class Question {
     /**
      * Using @Column, to change table's column name: converting camelCase to snake_case
      */
+    @JsonProperty("created_at")
+//    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss") // TODO fix format
     private LocalDateTime createdAt;
     @ManyToOne
     /**
@@ -37,5 +42,6 @@ public class Question {
      * @JoinColumn shows that this column isn't regular and storing foreign keys
      * Using @JoinColumn, to change table's column name: converting camelCase to snake_case
      */
-    private User user;
+    @JsonProperty("created_by")
+    private User createdBy;
 }
