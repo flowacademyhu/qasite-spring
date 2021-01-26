@@ -1,16 +1,25 @@
 package hu.flowacademy.qasitespring.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
+/**
+ * Importing GlobalBeanConfiguration to be able to inject ObjectMapper
+ */
+@Import(GlobalBeanConfiguration.class)
 @EnableWebSecurity
 /**
  * WebSecurityConfigurerAdapter provides us a default security config
@@ -21,10 +30,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+    @Value("${jwt.key}")
+    private String jwtKey;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        super.configure(auth);
-        // TODO override it when we implement login config
+        auth.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder());
     }
 
     @Override
@@ -52,7 +70,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 /**
                  * for any other endpoints only available after authentication
                  */
-                .anyRequest().authenticated();
+                .anyRequest().authenticated()
+        .and()
+                .addFilter(new AuthenticationFilter(authenticationManager(), jwtKey, objectMapper))
+                .addFilter(new AuthorizationFilter(authenticationManager(), jwtKey, userDetailsService))
+        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
     /**
