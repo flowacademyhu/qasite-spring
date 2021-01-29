@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,6 +35,17 @@ public class AnswerService {
         return answerRepository.save(answer);
     }
 
+    public Answer update(Answer answer) {
+        validateUpdate(answer);
+        answerRepository.update(answer.getAnswer(), answer.getId());
+        return answerRepository.findById(answer.getId())
+                .orElseThrow(() -> new NoContentException("answer id:" + answer.getId()));
+    }
+
+    public List<Answer> getQuestionAnswers(String questionId) {
+        return answerRepository.findByQuestion_id(questionId);
+    }
+
     private void validate(Answer answer) {
         if (Optional.ofNullable(answer.getQuestion())
                 .map(Question::getId)
@@ -46,13 +58,6 @@ public class AnswerService {
         }
     }
 
-    public Answer update(Answer answer) {
-        validateUpdate(answer);
-        answerRepository.update(answer.getAnswer(), answer.getId());
-        return answerRepository.findById(answer.getId())
-                .orElseThrow(() -> new NoContentException("answer id:" + answer.getId()));
-    }
-
     private void validateUpdate(Answer answer) {
         if (!StringUtils.hasText(answer.getId())) {
             throw new ValidationException("edit answer id");
@@ -61,4 +66,5 @@ public class AnswerService {
             throw new ValidationException("edit answer answer");
         }
     }
+
 }
