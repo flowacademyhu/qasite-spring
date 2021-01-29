@@ -89,4 +89,8 @@ public class QuestionService {
     public Question findOne(String id) {
         return questionRepository.findById(id).orElseThrow(() -> new NoContentException("id:"+id));
     }
+
+    public void delete(String id) {
+        questionRepository.deleteById(id);
+    }
 }

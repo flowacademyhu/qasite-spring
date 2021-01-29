@@ -8,6 +8,7 @@ import hu.flowacademy.qasitespring.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -50,5 +51,11 @@ public class QuestionController {
     @GetMapping("/questions/{id}")
     public Question findOne(@PathVariable String id) {
         return questionService.findOne(UUID.fromString(id).toString());
+    }
+
+    @DeleteMapping("/questions/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        questionService.delete(UUID.fromString(id).toString());
+        return ResponseEntity.ok().build();
     }
 }
