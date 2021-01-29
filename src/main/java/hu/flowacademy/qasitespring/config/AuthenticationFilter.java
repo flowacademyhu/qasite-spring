@@ -36,6 +36,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
      * JWT token expires after 30 minutes
      */
     private static final long EXPIRATION_TIME = 1000 * 60 * 30;
+    public static final String LOGIN_PATH = "/api/login";
 
     private final String jwtKey;
     private final ObjectMapper objectMapper;
@@ -46,6 +47,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         super(authenticationManager);
         this.jwtKey = jwtKey;
         this.objectMapper = objectMapper;
+        setFilterProcessesUrl(LOGIN_PATH);
     }
 
     /**

@@ -173,7 +173,7 @@ class QuestionControllerTest {
             return u;
         }).orElse(signUp());
 
-        String response = mockMvc.perform(post("/login")
+        String response = mockMvc.perform(post("/api/login")
                 .content(new ObjectMapper().writeValueAsBytes(Map.of(
                         "username", user.getUsername(),
                         "password", user.getPassword())))
