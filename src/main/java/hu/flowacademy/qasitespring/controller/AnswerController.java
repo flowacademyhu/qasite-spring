@@ -1,15 +1,13 @@
 package hu.flowacademy.qasitespring.controller;
 
 import hu.flowacademy.qasitespring.dto.AnswerCreateRequestDTO;
+import hu.flowacademy.qasitespring.dto.AnswerEditRequestDTO;
 import hu.flowacademy.qasitespring.model.Answer;
 import hu.flowacademy.qasitespring.model.Question;
 import hu.flowacademy.qasitespring.service.AnswerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -29,6 +27,13 @@ public class AnswerController {
                         .build())
                 .answer(requestDTO.getAnswer())
                 .build());
+    }
+
+    @PutMapping("/answers/{id}")
+    public Answer update(@PathVariable String id, @RequestBody AnswerEditRequestDTO requestDTO) {
+        return answerService.update(
+                Answer.builder().id(id).answer(requestDTO.getAnswer()).build()
+        );
     }
 
 }

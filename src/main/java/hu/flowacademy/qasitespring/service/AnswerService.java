@@ -1,5 +1,6 @@
 package hu.flowacademy.qasitespring.service;
 
+import hu.flowacademy.qasitespring.exception.NoContentException;
 import hu.flowacademy.qasitespring.exception.ValidationException;
 import hu.flowacademy.qasitespring.model.Answer;
 import hu.flowacademy.qasitespring.model.Question;
@@ -45,4 +46,19 @@ public class AnswerService {
         }
     }
 
+    public Answer update(Answer answer) {
+        validateUpdate(answer);
+        answerRepository.update(answer.getAnswer(), answer.getId());
+        return answerRepository.findById(answer.getId())
+                .orElseThrow(() -> new NoContentException("answer id:" + answer.getId()));
+    }
+
+    private void validateUpdate(Answer answer) {
+        if (!StringUtils.hasText(answer.getId())) {
+            throw new ValidationException("edit answer id");
+        }
+        if (!StringUtils.hasText(answer.getAnswer())) {
+            throw new ValidationException("edit answer answer");
+        }
+    }
 }
