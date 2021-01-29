@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/api")
@@ -43,5 +45,10 @@ public class QuestionController {
                 .count(questionPage.getTotalElements())
                 .data(questionPage.getContent())
                 .build();
+    }
+
+    @GetMapping("/questions/{id}")
+    public Question findOne(@PathVariable String id) {
+        return questionService.findOne(UUID.fromString(id).toString());
     }
 }

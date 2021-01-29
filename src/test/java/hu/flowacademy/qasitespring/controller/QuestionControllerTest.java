@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class QuestionControllerTest {
 
+    private static final UUID QUESTION_ID = UUID.randomUUID();
     private static final String QUESTION_TITLE = "question title";
     private static final String QUESTION_DESCRIPTION = "question description";
 
@@ -131,6 +133,32 @@ class QuestionControllerTest {
         IntStream.range(0, 3).forEach(i ->
                 questionRepository.deleteById(Integer.toString(i))
         );
+    }
+
+    @Test
+    @SneakyThrows
+    public void whenGettingQuestionByIdThenReturn() {
+        Question givenQuestion = Question.builder()
+                .id(QUESTION_ID.toString())
+                .title(QUESTION_TITLE)
+                .description(QUESTION_DESCRIPTION).build();
+        questionRepository.save(givenQuestion);
+
+        var body = mockMvc.perform(
+                get("/api/questions/" + QUESTION_ID.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", login())
+        )
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        Question result = new ObjectMapper().readValue(body, Question.class);
+        assertEquals(givenQuestion.getId(), result.getId());
+        assertEquals(givenQuestion.getTitle(), result.getTitle());
+        assertEquals(givenQuestion.getDescription(), result.getDescription());
+
+        questionRepository.deleteById(QUESTION_ID.toString());
     }
 
     @SneakyThrows

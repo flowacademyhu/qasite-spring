@@ -1,5 +1,6 @@
 package hu.flowacademy.qasitespring.service;
 
+import hu.flowacademy.qasitespring.exception.NoContentException;
 import hu.flowacademy.qasitespring.exception.ValidationException;
 import hu.flowacademy.qasitespring.model.Question;
 import hu.flowacademy.qasitespring.model.Status;
@@ -83,5 +84,9 @@ public class QuestionService {
         } else if (question.getDescription().length() > DESCRIPTION_MAX_LENGTH) {
             throw new ValidationException("question description length > 600");
         }
+    }
+
+    public Question findOne(String id) {
+        return questionRepository.findById(id).orElseThrow(() -> new NoContentException("id:"+id));
     }
 }
