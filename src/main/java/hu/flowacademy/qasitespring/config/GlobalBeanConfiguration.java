@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GlobalBeanConfiguration {
 
+    /**
+     * Making component from external class
+     */
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();

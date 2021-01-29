@@ -7,6 +7,9 @@ import hu.flowacademy.qasitespring.model.User;
 import hu.flowacademy.qasitespring.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,11 @@ public class QuestionService {
 
     private final QuestionRepository questionRepository;
 
+    /**
+     * save setting up the question's missing fields and storing it into the database
+     * @param question
+     * @return
+     */
     public Question save(Question question) {
         validate(question);
         question.setId(UUID.randomUUID().toString());
@@ -35,6 +43,32 @@ public class QuestionService {
         return questionRepository.save(question);
     }
 
+    /**
+     * findAll getting the specified page from the questions table
+     * @param limit the SQL's limit value, means the page size
+     * @param offset the SQL's offset value, means the page "number"
+     * @param sort the SQL's order by value, means the order of the data
+     * @return questions page
+     */
+    public Page<Question> findAll(int limit, int offset, String sort) {
+        return questionRepository.findAll(
+                PageRequest.of(
+                        offset != 0 ? (limit / offset) - 1 : 0,
+                        limit,
+                        Sort.by(sort)
+                )
+        );
+    }
+
+    /**
+     * validate validating the savable question object
+     * it has to be title and description
+     * title can't be longer then 100 chars
+     * description can't be longer then 600 chars
+     * the id has to be null
+     * @param question
+     * @throws ValidationException if something went wrong
+     */
     private void validate(Question question) {
         if (StringUtils.hasText(question.getId())) {
             throw new ValidationException("question id");

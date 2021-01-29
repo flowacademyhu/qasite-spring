@@ -30,15 +30,28 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+    /**
+     * Inject it to be able to pass it to AuthenticationFilter
+     */
     @Autowired
     private ObjectMapper objectMapper;
 
+    /**
+     * Injecting our UserDetailsService implementation to use it in the authentication workflow
+     */
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    /**
+     * The jwt token's signing key, we get it from application.yaml to be configurable
+     */
     @Value("${jwt.key}")
     private String jwtKey;
 
+    /**
+     * Using userDetailsService to try to get the user by the passed username (what we made in AuthenticationFilter)
+     * also adding the password encoder, to Spring Security will be able to compare the got password and the stored one
+     */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)
