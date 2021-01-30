@@ -1,16 +1,16 @@
 package hu.flowacademy.qasitespring.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hu.flowacademy.qasitespring.common.Helper;
 import hu.flowacademy.qasitespring.dto.QuestionListResponseDTO;
 import hu.flowacademy.qasitespring.dto.QuestionRequestDTO;
 import hu.flowacademy.qasitespring.model.Question;
 import hu.flowacademy.qasitespring.model.Status;
-import hu.flowacademy.qasitespring.model.User;
 import hu.flowacademy.qasitespring.repository.QuestionRepository;
 import hu.flowacademy.qasitespring.repository.UserRepository;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +22,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @ExtendWith(SpringExtension.class)
@@ -41,8 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class QuestionControllerTest {
 
     private static final UUID QUESTION_ID = UUID.randomUUID();
-    private static final String QUESTION_TITLE = "question title";
-    private static final String QUESTION_DESCRIPTION = "question description";
+    public static final String QUESTION_TITLE = "question title";
+    public static final String QUESTION_DESCRIPTION = "question description";
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,6 +48,12 @@ class QuestionControllerTest {
     private QuestionRepository questionRepository;
     @Autowired
     private UserRepository userRepository;
+    private Helper helper;
+
+    @BeforeEach
+    public void before() {
+        helper = new Helper(mockMvc, userRepository);
+    }
 
     @Test
     @SneakyThrows
@@ -58,7 +62,7 @@ class QuestionControllerTest {
                 post("/api/questions")
                         .content(givenQuestionRequest())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", login())
+                        .header("Authorization", helper.login())
         )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -89,7 +93,7 @@ class QuestionControllerTest {
         var body = mockMvc.perform(
                 get("/api/questions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", login())
+                        .header("Authorization", helper.login())
         )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -117,7 +121,7 @@ class QuestionControllerTest {
                         .param("offset", "1")
                         .param("sort", "id")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", login())
+                        .header("Authorization", helper.login())
         )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -147,7 +151,7 @@ class QuestionControllerTest {
         var body = mockMvc.perform(
                 get("/api/questions/" + QUESTION_ID.toString())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", login())
+                        .header("Authorization", helper.login())
         )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -161,51 +165,35 @@ class QuestionControllerTest {
         questionRepository.deleteById(QUESTION_ID.toString());
     }
 
+    @Test
+    @SneakyThrows
+    public void whenDeletingQuestionByIdThenReturnOk() {
+        UUID id = UUID.randomUUID();
+        Question givenQuestion = Question.builder()
+                .id(id.toString())
+                .title(QUESTION_TITLE)
+                .description(QUESTION_DESCRIPTION).build();
+        questionRepository.save(givenQuestion);
+
+        mockMvc.perform(
+                delete("/api/questions/" + id.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", helper.login())
+        )
+                .andExpect(status().isOk())
+        .andReturn();
+
+        thenQuestionIdNotExist(id);
+    }
+
+    private void thenQuestionIdNotExist(UUID id) {
+        assertTrue(questionRepository.findById(id.toString()).isEmpty());
+    }
+
+
     @SneakyThrows
     private String givenQuestionRequest() {
         return new ObjectMapper().writeValueAsString(new QuestionRequestDTO(QUESTION_TITLE, QUESTION_DESCRIPTION));
-    }
-
-    @SneakyThrows
-    private String login() {
-        var user = userRepository.findByUsername("admin").map(u -> {
-            u.setPassword("admin");
-            return u;
-        }).orElse(signUp());
-
-        String response = mockMvc.perform(post("/api/login")
-                .content(new ObjectMapper().writeValueAsBytes(Map.of(
-                        "username", user.getUsername(),
-                        "password", user.getPassword())))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-        var responseData = new ObjectMapper().readValue(response, new TypeReference<Map<String, String>>() {
-        });
-
-        return responseData.get("token");
-    }
-
-    /**
-     * @return
-     * @SneakyThrows because we don't want to catch the exception, if we got, the test have to fail
-     */
-    @SneakyThrows
-    public User signUp() {
-        mockMvc.perform(
-                post("/api/users")
-                        .content(new ObjectMapper().writeValueAsBytes(
-                                Map.of("username", "admin",
-                                        "password", "admin",
-                                        "full_name", "admin")))
-                        .contentType(MediaType.APPLICATION_JSON)
-        )
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.msg").value("Successfully registration!"));
-
-        return User.builder().username("admin").password("admin").build();
     }
 
 }

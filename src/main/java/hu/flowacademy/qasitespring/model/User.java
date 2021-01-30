@@ -24,7 +24,7 @@ import java.util.List;
  * User.builder().username("username").password("password").build() instead of
  * new User(null, "username", "password")
  * */
-@Builder
+@Builder(toBuilder = true)
 /**
  * Generated a default constructor
  * */
